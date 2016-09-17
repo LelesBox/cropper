@@ -1,36 +1,38 @@
 <template lang="html">
-  <div class="file-upload-container">
-    <img class="dest-image" v-el:image v-show="showImage" @click="$els.input.click()"/>
-    <a class="file-upload-icon" v-show="!showImage">
-      <input v-el:input type="file" accept="image/png,image/jpeg,image/gif" @change="change">
-    </a>
-    <div class="crop-container">
-      <div class="crop-container__source" @mouseup="mouseup" @mousemove="mousemove">
-        <img class="crop-container__source__image" :src="imgSrc" v-el:img/>
-        <div class="crop-box" :style = "cropBoxStyle" @mousedown="mousedown" v-el:cropbox>
-          <span class="crop-line-h"></span>
-          <span class="crop-line-v"></span>
-          <!-- border  -->
-          <span class="crop-line-border-top" v-el:border-top></span>
-          <span class="crop-line-border-right" v-el:border-right></span>
-          <span class="crop-line-border-bottom" v-el:border-bottom></span>
-          <span class="crop-line-border-left" v-el:border-left></span>
-          <!-- corner -->
-          <span class="crop-corner crop-corner__left-top" v-el:left-top></span>
-          <span class="crop-corner crop-corner__right-top" v-el:right-top></span>
-          <span class="crop-corner crop-corner__right-bottom" v-el:right-bottom></span>
-          <span class="crop-corner crop-corner__left-bottom" v-el:left-bottom></span>
-          <!-- 防止图片被选中 -->
-          <div class="crop-inner-container" :style="selectPicStyle">
-            <img class="crop-container__source__image" :src="imgSrc"/>
-          </div>
-          <div class="crop-box__mask" v-el:cropmask></div>
+<div class="file-upload-container">
+  <img class="dest-image" :src="destImg" v-show="destImg !== null" @click="openFile" />
+  <a class="file-upload-icon" v-show="destImg === null">
+    <input v-el:input type="file" accept="image/png,image/jpeg,image/gif" @change="change" v-show="!openCrop">
+  </a>
+  <div class="crop-container" v-show="openCrop">
+    <div class="crop-container__source" @mouseup="mouseup" @mousemove="mousemove">
+      <img class="crop-container__source__image" :src="imgSrc" v-el:img/>
+      <div class="crop-box" :style="cropBoxStyle" @mousedown="mousedown" v-el:cropbox>
+        <span class="crop-line-h"></span>
+        <span class="crop-line-v"></span>
+        <!-- border  -->
+        <span class="crop-line-border-top" v-el:border-top></span>
+        <span class="crop-line-border-right" v-el:border-right></span>
+        <span class="crop-line-border-bottom" v-el:border-bottom></span>
+        <span class="crop-line-border-left" v-el:border-left></span>
+        <!-- corner -->
+        <span class="crop-corner crop-corner__left-top" v-el:left-top></span>
+        <span class="crop-corner crop-corner__right-top" v-el:right-top></span>
+        <span class="crop-corner crop-corner__right-bottom" v-el:right-bottom></span>
+        <span class="crop-corner crop-corner__left-bottom" v-el:left-bottom></span>
+        <!-- 防止图片被选中 -->
+        <div class="crop-inner-container" :style="selectPicStyle">
+          <img class="crop-container__source__image" :src="imgSrc" />
         </div>
+        <!-- 盖上一层顶级元素，好让鼠标作为target方便拖动 -->
+        <div class="crop-box__mask" v-el:cropmask></div>
       </div>
-      <canvas class="crop-canvas" v-el:canvas width="200" height="200"></canvas>
-      <button type="button" name="button" @click="clip">裁剪吧</button>
     </div>
+    <canvas class="crop-canvas" v-el:canvas width="200" height="200"></canvas>
+    <div @click="closeCrop" class="crop-btn crop-cancel">取消</div>
+    <div @click="clip" class="crop-btn crop-yes">确定</div>
   </div>
+</div>
 </template>
 
 <script>
@@ -49,18 +51,21 @@ export default {
     limit: {
       type: Number,
       default: 2048
-    },
-    ratio: {
-      type: Number,
-      default: 1
     }
+    // ratio: {
+    //   type: Number,
+    //   default: 1
+    // }
   },
   data: function () {
     return {
+      openCrop: false,
       image: new Image(),
-      imgSrc: 'https://misc.aotu.io/Tingglelaoo/o2mailsign_900x500.jpg',
+      destImg: null,
+      imgSrc: null,
       cropBox: {
-        height: baseWidth * this.ratio,
+        // height: baseWidth * this.ratio //目前不支持ratio,
+        height: baseWidth,
         width: baseWidth,
         left: 0,
         top: 0
@@ -71,7 +76,6 @@ export default {
         top: 0,
         left: 0
       },
-      showImage: false,
       isMousedown: false,
       MoveType: {
         moveRightBottom: 'moveRightBottom',
@@ -94,11 +98,6 @@ export default {
   ready () {
     on(document, 'mouseup', () => this.mouseup())
     this.canvas.ctx = this.$els.canvas.getContext('2d')
-    // for demo
-    // this.image.onload = () => {
-    //   this.draw()
-    // }
-    // this.image.src = this.imgSrc
   },
   computed: {
     cropBoxStyle: function () {
@@ -133,12 +132,20 @@ export default {
       this.canvas.ctx.drawImage(this.image, source.x, source.y, source.width, source.height, dest.x, dest.y, dest.width, dest.height)
     },
     clip: function () {
-      this.$els.image.src = this.$els.canvas.toDataURL()
+      this.destImg = this.$els.canvas.toDataURL()
+      this.closeCrop()
+    },
+    openFile: function () {
+      if (!this.openCrop) {
+        this.$els.input.click()
+      }
+    },
+    closeCrop: function () {
+      this.openCrop = false
+      this.$els.input.value = ''
     },
     change: function () {
       var file = this.$els.input.files[0]
-      console.log(file)
-      window.file = file
       // 限制容量
       if (file && file.size <= this.limit * 1024) {
         var reader = new FileReader()
@@ -147,6 +154,7 @@ export default {
           this.setImageURL(url)
         }
         reader.readAsDataURL(file)
+        this.openCrop = true
       } else {
         alert('图片最大为2M')
       }
@@ -158,11 +166,10 @@ export default {
         if (height / width !== this.ratio) {
           console.log('比例不对啊:' + height / width)
         }
+        this.draw()
       }
       this.imgSrc = url
       this.image.src = url
-      this.showImage = true
-      this.draw()
     },
     generateDrwaImageParam: function () {
       var source = {
@@ -370,17 +377,12 @@ export default {
       if (Math.abs(offsetY) > Math.abs(offsetX)) {
         this.cropBox.width += offsetY
         this.cropBox.height += offsetY
-        // this.cropBox.top += offsetY
         this.cropBox.left -= offsetY
-        // this.selectPic.top -= offsetY
         this.selectPic.left += offsetY
       } else {
         this.cropBox.width -= offsetX
         this.cropBox.height -= offsetX
-        // this.cropBox.top += offsetX
         this.cropBox.left += offsetX
-        // this.selectPic.top -= offsetX
-        // this.selectPic.left = this.selectPic.top
         this.selectPic.left -= offsetX
       }
       this.draw()
@@ -401,204 +403,277 @@ export default {
 </script>
 
 <style lang="scss">
-  .file-upload-container {
-    * {
-      user-select:none;
-    }
-    .dest-image {
-      display: block;
-      height: 100%;
-      width: 100%;
-      position: relative;
-      z-index: 1;
-      top:0;
-      left: 0;
-      z-index: 2;
-    }
-    input {
-      display: block;
-      height: 100%;
-      width: 100%;
-      opacity: 0;
-      position: absolute;
-      z-index: 3;
-      cursor: pointer;
-    }
+$height: 400px;
+.file-upload-container {
+  * {
+    user-select: none;
   }
 
-  .crop-container {
-    position:absolute;
-    width:610px;
-    &__source {
-      height:400px;
-      width:400px;
-      float:left;
-      margin-right:10px;
-      text-align: center;
-      position: relative;
-      border: 1px solid gray;
-      &:before {
-        position: absolute;
-        content: "";
-        display: block;
-        height: 100%;
-        width: 100%;
-        z-index: 2;
-        background-color: rgba(0, 0, 0, .4);
-      }
-      &__image {
-        user-select:none;
-        position: relative;
-        z-index: 1;
-        top:50%;
-        transform: translateY(-50%);
-        max-height: 100%;
-        max-width: 100%;
-      }
-      .crop-box {
-        position:absolute;
-        z-index: 3;
-        cursor: move;
-        // background-color: rgba(255, 255, 255, .1);
-        overflow: hidden;
-        span {
-          display: block;
-          position: absolute;
-          z-index: 999;
-        }
-        .crop-line-h {
-          z-index: 997;
-          width: 100%;
-          height: 33.33%;
-          top:50%;
-          transform: translateY(-50%);
-          border-bottom: 1px dashed #000000;
-          border-top: 1px dashed #000000;
-        }
-        .crop-line-v {
-          z-index: 997;
-          height: 100%;
-          width: 33.33%;
-          left:50%;
-          transform: translateX(-50%);
-          border-left: 1px dashed #000000;
-          border-right: 1px dashed #000000;
-        }
-        .crop-line-border-top {
-          width: 100%;
-          height: 8px;
-          border-top:1px solid #000000;
-          top:0;
-          left:0;
-          cursor: n-resize;
-        }
-        .crop-line-border-right {
-          width: 8px;
-          height: 100%;
-          top:0;
-          right:0;
-          border-right: 1px solid #000000;
-          cursor: e-resize;
-        }
-        .crop-line-border-bottom {
-          width: 100%;
-          height: 8px;
-          bottom:0;
-          left:0;
-          border-bottom: 1px solid #000000;
-          cursor: s-resize;
-        }
-        .crop-line-border-left {
-          width: 8px;
-          height: 100%;
-          top:0;
-          left:0;
-          border-left: 1px solid #000000;
-          cursor: w-resize;
-        }
-        .crop-corner {
-          // position: relative;
-          z-index: 999;
-          height: 10px;
-          width: 10px;
-          background-color: #000000;
-          &__left-top {
-            left:0;
-            cursor: nw-resize;
-          }
-          &__right-top {
-            right: 0;
-            cursor: ne-resize;
-          }
-          &__right-bottom {
-            height: 20px;
-            width: 20px;
-            right: 0;
-            bottom: 0;
-            cursor: se-resize;
-          }
-          &__left-bottom {
-            left: 0;
-            bottom:0;
-            cursor: sw-resize;
-          }
-        }
-        .crop-inner-container {
-          height:400px;
-          width:400px;
-          background-color:#ffffff;
-          margin-left:0px;
-          margin-top:0px;
-          position: relative;
-          z-index: 1;
-        }
-        &__mask {
-          position:absolute;
-          z-index: 998;
-          display: block;
-          content: "";
-          height:100%;
-          width:100%;
-          top:0;
-          left:0;
-          // background-color:red;
-        }
-      }
-    }
+  .dest-image {
+    display: block;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    z-index: 2;
   }
 
   .file-upload-icon {
     display: inline-block;
     border: 1px solid #000000;
     position: relative;
-    z-index: 999;
+    z-index: 1;
     cursor: pointer;
     height: 100%;
     width: 100%;
-    &:before, &:after {
+
+    &:before,
+    &:after {
       content: '';
       display: block;
       position: absolute;
       z-index: 1;
-      top:50%;
+      top: 50%;
       left: 50%;
-      transform: translate(-50%,-50%);
+      transform: translate(-50%, -50%);
     }
+
     &:before {
       width: 40%;
       height: 1px;
       background-color: #000000;
     }
+
     &:after {
       height: 40%;
       width: 1px;
       background-color: #000000;
     }
   }
-  .crop-canvas {
-    box-sizing:border-box;
-    border:1px solid #aaaaaa;
-    width:200px;
-    height:200px;
+
+  input {
+    display: block;
+    height: 100%;
+    width: 100%;
+    opacity: 0;
+    position: absolute;
+    z-index: 3;
+    cursor: pointer;
   }
+}
+
+.crop-container {
+  position: fixed;
+  width: $height + ($height / 2) + 10 + 20 * 2;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 20px;
+  background-color: #ffffff;
+  box-shadow: 0 0 0 10000px rgba(0, 0, 0, .7);
+  text-align: center;
+  border-radius: 4px;
+  z-index: 9999;
+
+  &__source {
+    height: $height;
+    width: $height;
+    float: left;
+    margin-right: 10px;
+    position: relative;
+
+    // 原图背景变暗
+    &:before {
+      position: absolute;
+      content: "";
+      display: block;
+      height: 100%;
+      width: 100%;
+      z-index: 2;
+      background-color: rgba(0, 0, 0, .4);
+    }
+
+    &__image {
+      user-select: none;
+      position: relative;
+      z-index: 1;
+      top: 50%;
+      transform: translateY(-50%);
+      max-height: 100%;
+      max-width: 100%;
+    }
+
+    .crop-box {
+      position: absolute;
+      z-index: 3;
+      cursor: move;
+      overflow: hidden;
+
+      span {
+        display: block;
+        position: absolute;
+        z-index: 999;
+      }
+
+      .crop-line-h {
+        z-index: 997;
+        width: 100%;
+        height: 33.33%;
+        top: 50%;
+        transform: translateY(-50%);
+        border-bottom: 1px dashed #000000;
+        border-top: 1px dashed #000000;
+      }
+
+      .crop-line-v {
+        z-index: 997;
+        height: 100%;
+        width: 33.33%;
+        left: 50%;
+        transform: translateX(-50%);
+        border-left: 1px dashed #000000;
+        border-right: 1px dashed #000000;
+      }
+
+      .crop-line-border-top {
+        width: 100%;
+        height: 8px;
+        border-top: 1px solid #000000;
+        top: 0;
+        left: 0;
+        cursor: n-resize;
+      }
+
+      .crop-line-border-right {
+        width: 8px;
+        height: 100%;
+        top: 0;
+        right: 0;
+        border-right: 1px solid #000000;
+        cursor: e-resize;
+      }
+
+      .crop-line-border-bottom {
+        width: 100%;
+        height: 8px;
+        bottom: 0;
+        left: 0;
+        border-bottom: 1px solid #000000;
+        cursor: s-resize;
+      }
+
+      .crop-line-border-left {
+        width: 8px;
+        height: 100%;
+        top: 0;
+        left: 0;
+        border-left: 1px solid #000000;
+        cursor: w-resize;
+      }
+
+      .crop-corner {
+        z-index: 999;
+        height: 10px;
+        width: 10px;
+        background-color: #000000;
+
+        &__left-top {
+          left: 0;
+          cursor: nw-resize;
+        }
+
+        &__right-top {
+          right: 0;
+          cursor: ne-resize;
+        }
+
+        &__right-bottom {
+          height: 20px;
+          width: 20px;
+          right: 0;
+          bottom: 0;
+          cursor: se-resize;
+        }
+
+        &__left-bottom {
+          left: 0;
+          bottom: 0;
+          cursor: sw-resize;
+        }
+      }
+
+      .crop-inner-container {
+        height: $height;
+        width: $height;
+        background-color: #ffffff;
+        margin-left: 0px;
+        margin-top: 0px;
+        position: relative;
+        z-index: 1;
+      }
+
+      &__mask {
+        position: absolute;
+        z-index: 998;
+        display: block;
+        content: "";
+        height: 100%;
+        width: 100%;
+        top: 0;
+        left: 0;
+      }
+    }
+  }
+}
+
+.crop-canvas {
+  box-sizing: border-box;
+  display: block;
+  float: left;
+  background-color: #eeeeee;
+  width: $height / 2;
+  height: $height / 2;
+}
+
+.crop-btn {
+  height: 50px;
+  width: 200px;
+  position: absolute;
+  right: 10px;
+  line-height: 50px;
+  text-align: center;
+  color: #ffffff;
+  border-radius: 4px;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all .2s ease;
+
+  &.crop-yes {
+    bottom: 20px;
+    background-color: #648fe7;
+
+    &:hover {
+      background-color: #64afff;
+    }
+
+    &:active {
+      background-color: #64bfff;
+    }
+  }
+
+  &.crop-cancel {
+    bottom: 20px + 50 + 10;
+    background-color: rgba(234, 24, 17, 1);
+
+    &:hover {
+      background-color: rgba(234, 24, 17, .8);
+    }
+
+    &:active {
+      background-color: rgba(234, 24, 17, 1);
+    }
+  }
+}
 </style>

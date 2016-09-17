@@ -5,13 +5,15 @@
     height: 80px;
     width: 80px;
     position: relative;
-    margin: 100px;
+    top:50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
 </style>
 
 <template lang="html">
-  <file-upload class="file-upload" :ratio="1"></file-upload>
+  <file-upload class="file-upload"></file-upload>
 </template>
 
 <script>
