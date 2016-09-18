@@ -471,7 +471,7 @@ $height: 400px;
   transform: translate(-50%, -50%);
   padding: 20px;
   background-color: #ffffff;
-  box-shadow: 0 0 0 10000px rgba(0, 0, 0, .7);
+  box-shadow: 0 0 0 1000px rgba(0, 0, 0, .7);
   text-align: center;
   border-radius: 4px;
   z-index: 9999;
