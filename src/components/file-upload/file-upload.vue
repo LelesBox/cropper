@@ -51,17 +51,15 @@ export default {
     limit: {
       type: Number,
       default: 2048
+    },
+    destImg: {
+      default: null
     }
-    // ratio: {
-    //   type: Number,
-    //   default: 1
-    // }
   },
   data: function () {
     return {
       openCrop: false,
       image: new Image(),
-      destImg: null,
       imgSrc: null,
       cropBox: {
         // height: baseWidth * this.ratio //目前不支持ratio,

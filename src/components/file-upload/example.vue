@@ -13,13 +13,18 @@
 </style>
 
 <template lang="html">
-  <file-upload class="file-upload"></file-upload>
+  <file-upload class="file-upload" :dest-img.sync="destimg"></file-upload>
 </template>
 
 <script>
 import fileUpload from '.'
 
 export default {
+  data: function () {
+    return {
+      destimg: null
+    }
+  },
   components: {
     fileUpload
   }

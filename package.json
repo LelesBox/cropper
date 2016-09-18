@@ -8,6 +8,7 @@
     "dev": "node build/dev-server.js",
     "build": "node build/build.js",
     "test": "",
+    "component": "node build/build-components.js",
     "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
   },
   "dependencies": {
@@ -23,6 +24,7 @@
     "babel-preset-es2015": "^6.0.0",
     "babel-preset-stage-2": "^6.0.0",
     "babel-register": "^6.0.0",
+    "co": "^4.6.0",
     "connect-history-api-fallback": "^1.1.0",
     "css-loader": "^0.23.0",
     "eslint": "^2.10.2",
