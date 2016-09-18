@@ -639,7 +639,7 @@ $height: 400px;
   height: 50px;
   width: 200px;
   position: absolute;
-  right: 10px;
+  right: 20px;
   line-height: 50px;
   text-align: center;
   color: #ffffff;
