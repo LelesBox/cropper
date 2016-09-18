@@ -405,6 +405,7 @@ $height: 400px;
 .file-upload-container {
   * {
     user-select: none;
+    box-sizing: border-box;
   }
 
   .dest-image {
