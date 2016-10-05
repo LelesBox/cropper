@@ -5,10 +5,6 @@
 <script>
 import fileUpload from './components/file-upload/example'
 export default {
-  data () {
-    return {
-    }
-  },
   components: {
     fileUpload
   }

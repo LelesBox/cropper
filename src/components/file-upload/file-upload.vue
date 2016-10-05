@@ -2,33 +2,33 @@
 <div class="file-upload-container">
   <img class="dest-image" :src="destImg" v-show="destImg !== null" @click="openFile" />
   <a class="file-upload-icon" v-show="destImg === null">
-    <input v-el:input type="file" accept="image/png,image/jpeg,image/gif" @change="change" v-show="!openCrop">
+    <input ref="input" type="file" accept="image/png,image/jpeg,image/gif" @change="change" v-show="!openCrop">
   </a>
   <div class="crop-container" v-show="openCrop">
     <div class="crop-container__source" @mouseup="mouseup" @mousemove="mousemove">
-      <img class="crop-container__source__image" :src="imgSrc" v-el:img/>
-      <div class="crop-box" :style="cropBoxStyle" @mousedown="mousedown" v-el:cropbox>
+      <img class="crop-container__source__image" :src="imgSrc" ref="img"/>
+      <div class="crop-box" :style="cropBoxStyle" @mousedown="mousedown" ref="cropbox">
         <span class="crop-line-h"></span>
         <span class="crop-line-v"></span>
         <!-- border  -->
-        <span class="crop-line-border-top" v-el:border-top></span>
-        <span class="crop-line-border-right" v-el:border-right></span>
-        <span class="crop-line-border-bottom" v-el:border-bottom></span>
-        <span class="crop-line-border-left" v-el:border-left></span>
+        <span class="crop-line-border-top" ref="borderTop"></span>
+        <span class="crop-line-border-right" ref="borderRight"></span>
+        <span class="crop-line-border-bottom" ref="borderBottom"></span>
+        <span class="crop-line-border-left" ref="borderLeft"></span>
         <!-- corner -->
-        <span class="crop-corner crop-corner__left-top" v-el:left-top></span>
-        <span class="crop-corner crop-corner__right-top" v-el:right-top></span>
-        <span class="crop-corner crop-corner__right-bottom" v-el:right-bottom></span>
-        <span class="crop-corner crop-corner__left-bottom" v-el:left-bottom></span>
+        <span class="crop-corner crop-corner__left-top" ref="leftTop"></span>
+        <span class="crop-corner crop-corner__right-top" ref="rightTop"></span>
+        <span class="crop-corner crop-corner__right-bottom" ref="rightBottom"></span>
+        <span class="crop-corner crop-corner__left-bottom" ref="leftBottom"></span>
         <!-- 防止图片被选中 -->
         <div class="crop-inner-container" :style="selectPicStyle">
           <img class="crop-container__source__image" :src="imgSrc" />
         </div>
         <!-- 盖上一层顶级元素，好让鼠标作为target方便拖动 -->
-        <div class="crop-box__mask" v-el:cropmask></div>
+        <div class="crop-box__mask" ref="cropmask"></div>
       </div>
     </div>
-    <canvas class="crop-canvas" v-el:canvas width="200" height="200"></canvas>
+    <canvas class="crop-canvas" ref="canvas" width="200" height="200"></canvas>
     <div @click="closeCrop" class="crop-btn crop-cancel">取消</div>
     <div @click="clip" class="crop-btn crop-yes">确定</div>
   </div>
@@ -51,9 +51,6 @@ export default {
     limit: {
       type: Number,
       default: 2048
-    },
-    destImg: {
-      default: null
     }
   },
   data: function () {
@@ -61,6 +58,7 @@ export default {
       openCrop: false,
       image: new Image(),
       imgSrc: null,
+      destImg: null,
       cropBox: {
         // height: baseWidth * this.ratio //目前不支持ratio,
         height: baseWidth,
@@ -93,9 +91,9 @@ export default {
       }
     }
   },
-  ready () {
+  mounted () {
     on(document, 'mouseup', () => this.mouseup())
-    this.canvas.ctx = this.$els.canvas.getContext('2d')
+    this.canvas.ctx = this.$refs.canvas.getContext('2d')
   },
   computed: {
     cropBoxStyle: function () {
@@ -118,7 +116,7 @@ export default {
   methods: {
     draw: function () {
       var { source, dest } = this.generateDrwaImageParam()
-      var rate = this.$els.img.naturalWidth / this.$els.img.clientWidth
+      var rate = this.$refs.img.naturalWidth / this.$refs.img.clientWidth
       var destRate = slice.h / this.cropBox.height
       for (var k in source) {
         source[k] = source[k] * rate
@@ -130,20 +128,20 @@ export default {
       this.canvas.ctx.drawImage(this.image, source.x, source.y, source.width, source.height, dest.x, dest.y, dest.width, dest.height)
     },
     clip: function () {
-      this.destImg = this.$els.canvas.toDataURL()
+      this.destImg = this.$refs.canvas.toDataURL()
       this.closeCrop()
     },
     openFile: function () {
       if (!this.openCrop) {
-        this.$els.input.click()
+        this.$refs.input.click()
       }
     },
     closeCrop: function () {
       this.openCrop = false
-      this.$els.input.value = ''
+      this.$refs.input.value = ''
     },
     change: function () {
-      var file = this.$els.input.files[0]
+      var file = this.$refs.input.files[0]
       // 限制容量
       if (file && file.size <= this.limit * 1024) {
         var reader = new FileReader()
@@ -176,8 +174,8 @@ export default {
       var dest = {
         x: 0, y: 0, width: slice.w, height: slice.h
       }
-      var imgPosition = this.$els.img.getBoundingClientRect()
-      var boxPosition = this.$els.cropbox.getBoundingClientRect()
+      var imgPosition = this.$refs.img.getBoundingClientRect()
+      var boxPosition = this.$refs.cropbox.getBoundingClientRect()
       var leftOffset = boxPosition.left - imgPosition.left
       var rightOffset = boxPosition.right - imgPosition.right
       var topOffset = boxPosition.top - imgPosition.top
@@ -261,19 +259,20 @@ export default {
         var py = e.pageY
         var offsetX = px - this.enterPoint.x
         var offsetY = py - this.enterPoint.y
-        if (this.target === this.$els.rightBottom || this.MoveType.current === this.MoveType.moveRightBottom) {
+        if (this.target === this.$refs.rightBottom || this.MoveType.current === this.MoveType.moveRightBottom) {
+          console.log('offsetX, offsetY')
           this.moveRightBottom(offsetX, offsetY)
           this.MoveType.current = this.MoveType.moveRightBottom
-        } else if (this.target === this.$els.rightTop || this.MoveType.current === this.MoveType.moveRightTop) {
+        } else if (this.target === this.$refs.rightTop || this.MoveType.current === this.MoveType.moveRightTop) {
           this.moveRightTop(offsetX, offsetY)
           this.MoveType.current = this.MoveType.moveRightTop
-        } else if (this.target === this.$els.leftTop || this.MoveType.current === this.MoveType.moveLeftTop) {
+        } else if (this.target === this.$refs.leftTop || this.MoveType.current === this.MoveType.moveLeftTop) {
           this.moveLeftTop(offsetX, offsetY)
           this.MoveType.current = this.MoveType.moveLeftTop
-        } else if (this.target === this.$els.leftBottom || this.MoveType.current === this.MoveType.moveLeftBottom) {
+        } else if (this.target === this.$refs.leftBottom || this.MoveType.current === this.MoveType.moveLeftBottom) {
           this.moveLeftBottom(offsetX, offsetY)
           this.MoveType.current = this.MoveType.moveLeftBottom
-        } else if (this.target === this.$els.cropmask || this.MoveType.current === this.MoveType.move) {
+        } else if (this.target === this.$refs.cropmask || this.MoveType.current === this.MoveType.move) {
           this.move(offsetX, offsetY)
           this.MoveType.current = this.MoveType.move
         }
@@ -284,6 +283,7 @@ export default {
       }
     },
     moveRightBottom: function (offsetX, offsetY) {
+      console.log(offsetX, offsetY)
       var minHeight = baseWidth
       var maxHeight = box.h
       var curW = this.cropBox.width + offsetX
@@ -404,8 +404,15 @@ export default {
 $height: 400px;
 .file-upload-container {
   * {
-    user-select: none;
     box-sizing: border-box;
+  }
+
+  img, canvas {
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -o-user-select: none;
+    -webkit-user-drag: none;
   }
 
   .dest-image {
