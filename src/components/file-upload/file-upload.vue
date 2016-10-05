@@ -260,7 +260,6 @@ export default {
         var offsetX = px - this.enterPoint.x
         var offsetY = py - this.enterPoint.y
         if (this.target === this.$refs.rightBottom || this.MoveType.current === this.MoveType.moveRightBottom) {
-          console.log('offsetX, offsetY')
           this.moveRightBottom(offsetX, offsetY)
           this.MoveType.current = this.MoveType.moveRightBottom
         } else if (this.target === this.$refs.rightTop || this.MoveType.current === this.MoveType.moveRightTop) {
@@ -283,7 +282,6 @@ export default {
       }
     },
     moveRightBottom: function (offsetX, offsetY) {
-      console.log(offsetX, offsetY)
       var minHeight = baseWidth
       var maxHeight = box.h
       var curW = this.cropBox.width + offsetX
